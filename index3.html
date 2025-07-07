@@ -1,169 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tic-Tac-Toe 💖</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe - Simple Fun</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
-      height: 100vh;
       margin: 0;
-      background: linear-gradient(135deg, #ffe1e8, #ffd6f6);
-      font-family: 'Segoe UI', sans-serif;
+      font-family: sans-serif;
+      background: linear-gradient(135deg, #ffdde1, #ee9ca7);
       display: flex;
       align-items: center;
       justify-content: center;
+      height: 100vh;
     }
 
-    .game-container {
-      background: rgba(255, 255, 255, 0.25);
-      border-radius: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 30px;
+    .wrapper {
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 25px;
       text-align: center;
-      width: 320px;
-      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 0 12px rgba(0,0,0,0.2);
     }
 
-    h1 {
-      font-size: 28px;
-      color: #d63384;
-      margin-bottom: 20px;
-      text-shadow: 1px 1px 2px #fff;
+    h2 {
+      margin-bottom: 15px;
+      color: #d6336c;
     }
 
-    .board {
+    .grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 25px;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
-    .cell {
-      width: 80px;
-      height: 80px;
-      font-size: 40px;
-      background: #fff0f6;
+    .box {
+      width: 70px;
+      height: 70px;
+      background-color: #fff0f6;
       border: 2px solid #f783ac;
-      border-radius: 15px;
+      border-radius: 10px;
+      font-size: 36px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.2s, background-color 0.2s;
+      transition: 0.2s;
     }
 
-    .cell:hover {
-      background-color: #ffe0eb;
+    .box:hover {
+      background-color: #ffe3ec;
       transform: scale(1.05);
     }
 
-    .status {
-      font-size: 18px;
-      color: #c2255c;
+    .info {
+      font-size: 16px;
+      color: #b3004b;
       margin-bottom: 15px;
-      text-shadow: 1px 1px 2px #fff;
     }
 
     button {
-      padding: 10px 25px;
-      font-size: 16px;
-      background-color: #f06595;
+      padding: 8px 20px;
+      background-color: #ff5d8f;
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
 
     button:hover {
-      background-color: #d6336c;
-    }
-
-    @media (max-width: 400px) {
-      .cell {
-        width: 60px;
-        height: 60px;
-        font-size: 30px;
-      }
+      background-color: #e0245e;
     }
   </style>
 </head>
 <body>
 
-  <div class="game-container">
-    <h1>Tic-Tac-Toe 💖</h1>
-    <div class="board" id="board"></div>
-    <div class="status" id="status">Player ❌'s turn</div>
-    <button onclick="resetGame()">🔁 Restart</button>
+  <div class="wrapper">
+    <h2>Tic Tac Toe 🎮</h2>
+    <div class="grid" id="gameBoard"></div>
+    <div class="info" id="msgBox">Player ❌ goes first</div>
+    <button onclick="startAgain()">Restart</button>
   </div>
 
   <script>
-    const board = document.getElementById("board");
-    const status = document.getElementById("status");
-    let currentPlayer = "❌";
-    let gameOver = false;
-    let cells = [];
+    const gameBoard = document.getElementById("gameBoard");
+    const msgBox = document.getElementById("msgBox");
 
-    const winPatterns = [
+    let squares = [];
+    let current = "❌";
+    let gameFinished = false;
+
+    // Winning combinations
+    const combos = [
       [0,1,2], [3,4,5], [6,7,8],
       [0,3,6], [1,4,7], [2,5,8],
       [0,4,8], [2,4,6]
     ];
 
-    function createBoard() {
-      board.innerHTML = "";
-      cells = [];
+    // Initialize board
+    function setupBoard() {
+      gameBoard.innerHTML = "";
+      squares = [];
       for (let i = 0; i < 9; i++) {
-        const cell = document.createElement("div");
-        cell.classList.add("cell");
-        cell.addEventListener("click", () => handleClick(i));
-        board.appendChild(cell);
-        cells.push(cell);
+        const square = document.createElement("div");
+        square.className = "box";
+        square.addEventListener("click", () => playMove(i));
+        gameBoard.appendChild(square);
+        squares.push(square);
       }
     }
 
-    function handleClick(i) {
-      if (gameOver || cells[i].textContent !== "") return;
-      cells[i].textContent = currentPlayer;
+    // Handle player move
+    function playMove(index) {
+      if (gameFinished || squares[index].textContent) return;
 
-      if (checkWinner()) {
-        status.innerHTML = `🎉 <strong>${currentPlayer}</strong> wins the game!`;
-        gameOver = true;
-      } else if (cells.every(cell => cell.textContent !== "")) {
-        status.innerHTML = "😮 It's a <strong>draw</strong>!";
-        gameOver = true;
+      squares[index].textContent = current;
+
+      if (checkWin()) {
+        msgBox.innerHTML = `🎉 Player ${current} wins!`;
+        gameFinished = true;
+      } else if (squares.every(sq => sq.textContent !== "")) {
+        msgBox.innerHTML = `🤝 It's a draw!`;
+        gameFinished = true;
       } else {
-        currentPlayer = currentPlayer === "❌" ? "⭕" : "❌";
-        status.textContent = `Player ${currentPlayer}'s turn`;
+        current = current === "❌" ? "⭕" : "❌";
+        msgBox.textContent = `Player ${current}'s turn`;
       }
     }
 
-    function checkWinner() {
-      return winPatterns.some(([a, b, c]) => {
-        return (
-          cells[a].textContent &&
-          cells[a].textContent === cells[b].textContent &&
-          cells[a].textContent === cells[c].textContent
-        );
+    // Check if someone won
+    function checkWin() {
+      return combos.some(pattern => {
+        const [a, b, c] = pattern;
+        return squares[a].textContent &&
+               squares[a].textContent === squares[b].textContent &&
+               squares[a].textContent === squares[c].textContent;
       });
     }
 
-    function resetGame() {
-      currentPlayer = "❌";
-      gameOver = false;
-      status.textContent = `Player ${currentPlayer}'s turn`;
-      createBoard();
+    // Restart the game
+    function startAgain() {
+      current = "❌";
+      gameFinished = false;
+      msgBox.textContent = "Player ❌ goes first";
+      setupBoard();
     }
 
-    createBoard();
+    // Start first time
+    setupBoard();
   </script>
-
 </body>
 </html>
